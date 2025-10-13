@@ -13,6 +13,7 @@ import { AuthModule } from './auth.module';
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
+        dbName: 'residential',
         uri: configService.get<string>('MONGO_URL'),
         tls: true,
         tlsAllowInvalidCertificates: true,

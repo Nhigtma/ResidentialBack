@@ -28,6 +28,8 @@
     "@nestjs/mongoose": "^11.0.3",
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
+    "@nestjs/swagger": "^11.2.0",
+    "@scalar/nestjs-api-reference": "^1.0.4",
     "bcrypt": "^6.0.0",
     "mongoose": "^8.18.1",
     "passport": "^0.7.0",

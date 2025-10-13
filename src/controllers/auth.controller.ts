@@ -1,14 +1,29 @@
-import { Controller, Post, Request, UseGuards } from '@nestjs/common';
-import { LocalAuthGuard } from 'src/middleware/guards/local-auth.guard';
+import { Body, Controller, HttpCode, Post } from '@nestjs/common';
+import { ApiBadRequestResponse, ApiOkResponse, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { LoginDto } from 'src/dtos/login.dto';
+import { ErrorResponse, LoginResponse } from 'src/responses/auth.responses';
 import { AuthService } from 'src/services/auth.service';
-
 @Controller('auth')
 export class AuthController {
 constructor(private authService: AuthService) {}
 
-@UseGuards(LocalAuthGuard)
+//@UseGuards(LocalAuthGuard)
 @Post('login')
-login(@Request() req) {
-    return this.authService.login(req.User)
-}
+@HttpCode(200)
+@ApiOkResponse({
+    description: 'Sign in successfully',
+    type: LoginResponse
+})
+@ApiBadRequestResponse({
+    description: 'Missing credential',
+    type: ErrorResponse
+})
+@ApiUnauthorizedResponse({
+    description: 'Invalid credentials',
+    type: ErrorResponse
+})
+
+async login(@Body() loginDto: LoginDto): Promise<LoginResponse> {
+    return await this.authService.login(loginDto)
+    }
 }
