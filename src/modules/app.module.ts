@@ -1,7 +1,12 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule } from '@nestjs/mongoose';
+import { ArModule } from './ar.module';
+import { AssemblyModule } from './assembly.module';
 import { AuthModule } from './auth.module';
+import { HouseModule } from './house.module';
+import { QuestionModule } from './question.module';
+import { VoteModule } from './vote.module';
 
 @Module({
   imports: [
@@ -20,8 +25,12 @@ import { AuthModule } from './auth.module';
       }),
       inject: [ConfigService],
     }),
-
-    AuthModule
+    ArModule,
+    AuthModule,
+    AssemblyModule,
+    HouseModule,
+    QuestionModule,
+    VoteModule
   ],
 })
 export class AppModule {}

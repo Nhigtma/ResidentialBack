@@ -11,6 +11,9 @@ export class UserService {
         return this.userModel.findOne({username, active:true}).lean().exec();
     }
 
+    async findOneUserById (id: string) {
+        return this.userModel.findById({id, active:true}).lean().exec();
+    }
     /*async createUser() {
     const userData = {
         username: "sre",
