@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { JwtStrategy } from 'src/middleware/Jwt.strategy';
 import { Houses, HouseSchema } from 'src/schemas/house.schema';
@@ -12,9 +13,10 @@ import { UserModule } from './user.module';
   imports : [
     MongooseModule.forFeature([{name:Houses.name ,schema: HouseSchema}]),
               AuthModule,
-              UserModule
+              UserModule,
+              JwtModule
   ],
-  providers: [HouseService, UserService, JwtStrategy],
+  providers: [HouseService, UserService, JwtStrategy, JwtService],
   exports: [MongooseModule, HouseService],
   controllers: [HouseController]
 })

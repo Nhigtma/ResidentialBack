@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { JwtStrategy } from 'src/middleware/Jwt.strategy';
 import { Votes, VoteSchema } from 'src/schemas/vote.schema';
@@ -14,9 +15,10 @@ import { UserModule } from './user.module';
   imports : [
       MongooseModule.forFeature([{name:Votes.name ,schema: VoteSchema}]),
                 AuthModule,
-                UserModule
+                UserModule,
+                JwtModule
     ],
-  providers: [VoteService, QuestionService, UserService, ArService, JwtStrategy],
+  providers: [VoteService, QuestionService, UserService, ArService, JwtStrategy, JwtService],
   controllers: [VoteController],
   exports: [MongooseModule, VoteService]
 })

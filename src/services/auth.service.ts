@@ -12,7 +12,7 @@ export class AuthService {
   ) {}
 
   async validateToken(id: string) {
-    return await this.userService.findOneUser(id);
+    return await this.userService.findOneUserById(id);
   }
 
   async validateUser(username: string, password: string) {
@@ -34,7 +34,6 @@ export class AuthService {
       throw new UnauthorizedException("Invalid credentials")
     }
     const payload ={id: user._id, permissionLevel: user.rol};
-    console.log(user.rol)
     return {
       access_token: this.jwtService.sign(payload),
       rol: user.rol

@@ -1,8 +1,10 @@
-import { BadRequestException, Controller, InternalServerErrorException, Post, UploadedFile, UseInterceptors } from '@nestjs/common';
+import { BadRequestException, Controller, Get, InternalServerErrorException, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
 import { multerOptions } from 'src/config/multer.config';
 import { HouseData } from 'src/interfaces/house_data.interface';
+import { JwtAuthGuard } from 'src/middleware/JwtAuth.guard';
+import { RequiredPermission } from 'src/middleware/RequiredPermission.decorator';
 import { HouseService } from 'src/services/house.service';
 import { read, utils } from 'xlsx';
 
@@ -77,5 +79,12 @@ Upload an Excel file (.xlsx or .xls) containing house and resident information.
       console.error('Error processing Excel file:', error);
       throw new InternalServerErrorException('Unexpected error happened processing an excel file')
     }
+  }
+
+  @Get()
+  @UseGuards(JwtAuthGuard)
+  @RequiredPermission(1)
+  async getAllHouses () {
+    return "hello world"
   }
 }

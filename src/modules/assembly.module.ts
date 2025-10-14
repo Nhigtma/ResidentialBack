@@ -1,4 +1,5 @@
 import { Module } from '@nestjs/common';
+import { JwtModule, JwtService } from '@nestjs/jwt';
 import { MongooseModule } from '@nestjs/mongoose';
 import { JwtStrategy } from 'src/middleware/Jwt.strategy';
 import { Assemblies, AssemblySchema } from 'src/schemas/assembly.schema';
@@ -11,9 +12,10 @@ import { UserModule } from './user.module';
   imports: [
           MongooseModule.forFeature([{name:Assemblies.name ,schema: AssemblySchema}]),
                     AuthModule,
-                    UserModule
+                    UserModule,
+                    JwtModule
       ],
-  providers: [AssemblyService, JwtStrategy],
+  providers: [AssemblyService, JwtStrategy, JwtService],
   controllers: [AssemblyController],
   exports: [AssemblyService, MongooseModule]
 })

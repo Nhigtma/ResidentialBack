@@ -41,8 +41,6 @@ export class HouseService {
                 const house = data[index];
                 
                 const shouldProcess = await this.shouldProcessHouse(house, index);
-                
-                console.log(shouldProcess);
 
                 if (shouldProcess) {
                     housesToProcess.push(house);
@@ -51,8 +49,6 @@ export class HouseService {
 
             for (let index = 0; index < housesToProcess.length; index++) {
                 const house = housesToProcess[index];
-
-                console.log(this.generatePassword(house))
 
                 const userData = {
                     username: house.CC_RESIDENTE.toString(),
@@ -75,7 +71,6 @@ export class HouseService {
             }
 
             await session.commitTransaction();
-            console.log(insertedHouses);
             return insertedHouses;
 
         } catch (error) {
@@ -96,53 +91,44 @@ export class HouseService {
         const houseName = house['CASA/APTO'];
 
         if (!hasResidentData) {
-            console.log('trigged')
             return false;
         }
 
         if (hasResidentData && (!houseName || !houseName.toString().trim())) {
-            console.log('trigged')
             throw new BadRequestException(`There is an unnamed house with resident data on row ${index + 1}`);
         }
 
         const hasAllResidentData = house.CC_RESIDENTE && house.CEL_RESIDENTE && house.NOMBRE_RESIDENTE;
         
         if (!hasAllResidentData) {
-            console.log('trigged')
             throw new BadRequestException(`There is incomplete resident data on row ${index + 1}`);
         }
 
         if (houseName && !houseName.toString().trim()) {
-            console.log('trigged')
             throw new BadRequestException(`House name cannot be blank on row ${index + 1}`);
         }
         
         if (!house.NOMBRE_RESIDENTE.toString().trim()) {
-            console.log('trigged')
             throw new BadRequestException(`Resident name cannot be blank on row ${index + 1}`);
         }
 
         if (isNaN(Number(house.CC_RESIDENTE))) {
-            console.log('trigged')
             throw new BadRequestException(`CC must be a number on row ${index + 1}`);
         }
         
         if (isNaN(Number(house.CEL_RESIDENTE))) {
-            console.log('trigged')
             throw new BadRequestException(`Cell number must be a number on row ${index + 1}`);
         }
 
         const cc = Number(house.CC_RESIDENTE);
         console.log(house.CC_RESIDENTE.toString())
         const ccValidation = !isNaN(cc) && cc > 0 && cc <= 9999999999 && house.CC_RESIDENTE.toString().length >= 6 && house.CC_RESIDENTE.toString().length <= 10;        if (!ccValidation) {
-            console.log('trigged')
             throw new BadRequestException(`Invalid CC number on row ${index + 1}`);
         }
 
         const cel = Number(house.CEL_RESIDENTE);
         console.log(house.CEL_RESIDENTE.toString())
         const celValidation = !isNaN(cel) && cel > 0 && cel <= 9999999999 && house.CEL_RESIDENTE.toString().length === 10;        if (!celValidation) {
-            console.log('trigged')
             throw new BadRequestException(`Invalid cell number on row ${index + 1}`);
         }
 
