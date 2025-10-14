@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, InternalServerErrorException } from '@
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 import { Model } from 'mongoose';
-import { HouseData } from 'src/interfaces/house_data.interface';
+import { HouseData, HousesRetrieve } from 'src/interfaces/house_data.interface';
 import { Houses, HousesDocument } from 'src/schemas/house.schema';
 import { UserService } from './user.service';
 
@@ -133,5 +133,23 @@ export class HouseService {
         }
 
         return true;
+    }
+
+    async getAll () {
+        const houses = await this.houseModel.find()
+        const housesToProcess: HousesRetrieve [] = []
+        for (let index = 0; index < houses.length; index ++) {
+            const h = houses[index]
+            const or = {
+                id: h._id,
+                'casa/apto':h.serial,
+                'name_resident':h.name_resident,
+                'cc_resident':h.cc_resident,
+                'phone_resident':h.phone_resident
+            };
+            console.log(or);
+            housesToProcess.push(or);
+        }
+        return await housesToProcess;
     }
 }

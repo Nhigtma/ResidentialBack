@@ -7,14 +7,3 @@ export class LoginResponse {
     @ApiProperty()
     rol: number
 }
-
-export class ErrorResponse {
-    @ApiProperty()
-    message: string;
-
-    @ApiProperty()
-    error: string;
-
-    @ApiProperty()
-    statusCode: number;
-}

@@ -1,7 +1,8 @@
 import { Body, Controller, HttpCode, Post } from '@nestjs/common';
 import { ApiBadRequestResponse, ApiOkResponse, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { LoginDto } from 'src/dtos/login.dto';
-import { ErrorResponse, LoginResponse } from 'src/responses/auth.responses';
+import { LoginResponse } from 'src/responses/auth.responses';
+import { ErrorResponse } from 'src/responses/error.response';
 import { AuthService } from 'src/services/auth.service';
 
 @ApiTags('auth')

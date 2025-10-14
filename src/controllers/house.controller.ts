@@ -1,10 +1,12 @@
 import { BadRequestException, Controller, Get, InternalServerErrorException, Post, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBearerAuth, ApiBody, ApiConsumes, ApiOperation, ApiTags } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBearerAuth, ApiBody, ApiConsumes, ApiCreatedResponse, ApiForbiddenResponse, ApiInternalServerErrorResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { multerOptions } from 'src/config/multer.config';
-import { HouseData } from 'src/interfaces/house_data.interface';
+import { HouseData, HousesRetrieve } from 'src/interfaces/house_data.interface';
 import { JwtAuthGuard } from 'src/middleware/JwtAuth.guard';
 import { RequiredPermission } from 'src/middleware/RequiredPermission.decorator';
+import { ErrorResponse } from 'src/responses/error.response';
+import { ExcelResponse, GetAllResponse } from 'src/responses/house.response';
 import { HouseService } from 'src/services/house.service';
 import { read, utils } from 'xlsx';
 
@@ -15,9 +17,31 @@ export class HouseController {
   constructor(private houseService: HouseService) {}
 
   @Post('excel')
+  @UseGuards(JwtAuthGuard)
+  @RequiredPermission(2)
   @UseInterceptors(FileInterceptor('file', multerOptions))
+  @ApiCreatedResponse({
+    description: 'Excel uploaded successfully',
+    type: [ExcelResponse]
+  })
+  @ApiUnauthorizedResponse({
+    description: 'No token provided',
+    type: ErrorResponse
+  })
+  @ApiForbiddenResponse({
+    description: 'Insufficient permissions',
+    type: ErrorResponse
+  })
+  @ApiBadRequestResponse({
+    description: 'A sort of validation error messages',
+    type: ErrorResponse
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'An unexpected error',
+    type: ErrorResponse
+  })
   @ApiOperation({
-    summary: 'Upload Excel file with house/resident data',
+    summary: 'Upload Excel file with house/resident data, permission required to use it 2',
     description: `
 Upload an Excel file (.xlsx or .xls) containing house and resident information.
 
@@ -58,7 +82,7 @@ Upload an Excel file (.xlsx or .xls) containing house and resident information.
       },
     },
   })
-  async uploadXlsx(@UploadedFile() file: Express.Multer.File) {
+  async uploadXlsx(@UploadedFile() file: Express.Multer.File): Promise<ExcelResponse[]>{
     if (!file) {
       throw new BadRequestException('No file uploaded');
     }
@@ -83,8 +107,27 @@ Upload an Excel file (.xlsx or .xls) containing house and resident information.
 
   @Get()
   @UseGuards(JwtAuthGuard)
-  @RequiredPermission(1)
-  async getAllHouses () {
-    return "hello world"
+  @RequiredPermission(2)
+  @ApiOkResponse({
+    description: 'Retrieves a list of houses',
+    type: [GetAllResponse]
+  })
+  @ApiUnauthorizedResponse({
+    description: 'No token provided',
+    type: ErrorResponse
+  })
+  @ApiForbiddenResponse({
+    description: 'Insufficient permissions',
+    type: ErrorResponse
+  })
+  @ApiInternalServerErrorResponse({
+    description: 'An unexpected error',
+    type: ErrorResponse
+  })
+  @ApiOperation({
+    summary: 'Retrieves a list of all houses, permission required to use it 2'
+  })
+  async getAllHouses () : Promise<HousesRetrieve[]> {
+    return await this.houseService.getAll()
   }
 }
