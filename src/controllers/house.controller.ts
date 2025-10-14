@@ -72,11 +72,7 @@ Upload an Excel file (.xlsx or .xls) containing house and resident information.
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const data = utils.sheet_to_json(worksheet) as HouseData[];
-
-      console.log(data);
-
-      return this.houseService.processExcel(data)
-      
+      return await this.houseService.processExcel(data)
     } catch (error) {
       console.error('Error processing Excel file:', error);
       throw new InternalServerErrorException('Unexpected error happened processing an excel file')

@@ -10,7 +10,7 @@ export class Houses {
     @Prop({required: true})
     serial: string;
 
-    @Prop({required: false, default: ""})
+    @Prop({required: false, default: undefined})
     name_resident: string;
 
     @Prop({required: false, default: NaN})
@@ -19,7 +19,7 @@ export class Houses {
     @Prop({required: false, default: NaN})
     phone_resident: number;
 
-    @Prop({required: false, default: ""})
+    @Prop({required: false, default: undefined})
     id_user: string;
 }
 

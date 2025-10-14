@@ -1,6 +1,6 @@
 import { Injectable } from "@nestjs/common";
 import { InjectModel } from "@nestjs/mongoose";
-import { Model } from "mongoose";
+import { ClientSession, Model } from "mongoose";
 import { Users, UsersDocumment } from "src/schemas/user.schema";
 
 @Injectable()
@@ -14,7 +14,12 @@ export class UserService {
     async findOneUserById (id: string) {
         return this.userModel.findById({id, active:true}).lean().exec();
     }
-    /*async createUser() {
+
+    async createUser(userData: any, options?: { session?: ClientSession }) {
+        const user = new this.userModel(userData);
+        return await user.save(options);
+    }
+    /*async createUserAdmin() {
     const userData = {
         username: "sre",
         password: await bcrypt.hash("1233", 10), // Encriptar password
