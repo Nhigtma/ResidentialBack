@@ -1,6 +1,6 @@
 import { BadRequestException, Body, Controller, Get, InternalServerErrorException, Post, Put, UploadedFile, UseGuards, UseInterceptors } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBadRequestResponse, ApiBearerAuth, ApiBody, ApiConsumes, ApiCreatedResponse, ApiForbiddenResponse, ApiInternalServerErrorResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
+import { ApiBadRequestResponse, ApiBearerAuth, ApiBody, ApiConsumes, ApiCreatedResponse, ApiForbiddenResponse, ApiInternalServerErrorResponse, ApiNotFoundResponse, ApiOkResponse, ApiOperation, ApiTags, ApiUnauthorizedResponse } from '@nestjs/swagger';
 import { multerOptions } from 'src/config/multer.config';
 import { UpdateHouse } from 'src/dtos/update_house.dto';
 import { HouseData, HousesRetrieve } from 'src/interfaces/house_data.interface';
@@ -99,6 +99,7 @@ Upload an Excel file (.xlsx or .xls) containing house and resident information.
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       const data = utils.sheet_to_json(worksheet) as HouseData[];
+      console.log(await this.houseService.processExcel(data))
       return await this.houseService.processExcel(data)
     } catch (error) {
       throw new InternalServerErrorException('Unexpected error happened processing an excel file')
@@ -135,7 +136,7 @@ Upload an Excel file (.xlsx or .xls) containing house and resident information.
   @UseGuards(JwtAuthGuard)
   @RequiredPermission(2)
   @ApiOkResponse({
-    description: 'Retrieves a list of houses',
+    description: 'Retrieve data of updated house',
     type: GetAllResponse
   })
   @ApiBadRequestResponse({
@@ -150,12 +151,16 @@ Upload an Excel file (.xlsx or .xls) containing house and resident information.
     description: 'Insufficient permissions',
     type: ErrorResponse
   })
+  @ApiNotFoundResponse({
+          description: 'House not found',
+          type: ErrorResponse
+      })
   @ApiInternalServerErrorResponse({
     description: 'An unexpected error',
     type: ErrorResponse
   })
   @ApiOperation({
-    summary: 'Retrieves a list of all houses, permission required to use it 2'
+    summary: 'Updates a house s resident information and update its user account, permission required to use it 2'
   })
   async updateHouse (@Body () updateHouse: UpdateHouse) : Promise<HousesRetrieve>{
     return await this.houseService.update(updateHouse);

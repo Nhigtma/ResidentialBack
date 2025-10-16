@@ -7,7 +7,7 @@ export type HousesDocument = HydratedDocument<House>
 
 @Schema({timestamps: true})
 export class Houses {
-    @Prop({required: true})
+    @Prop({required: true,})
     serial: string;
 
     @Prop({required: false, default: undefined})

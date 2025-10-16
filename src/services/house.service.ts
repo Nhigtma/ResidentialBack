@@ -63,9 +63,11 @@ export class HouseService {
                     name_resident: house.NOMBRE_RESIDENTE,
                     cc_resident: house.CC_RESIDENTE,
                     phone_resident: house.CEL_RESIDENTE,
-                    id_user: user._id
+                    id_user: String(user?._id)
                 };
-
+                if (await this.houseModel.findOne({serial: houseModel.serial})){
+                    throw new BadRequestException('Already exists a house with that serial')
+                }
                 await this.houseModel.create([houseModel], { session });
                 insertedHouses.push(houseModel);
             }
@@ -198,6 +200,9 @@ export class HouseService {
             const before = await this.houseModel.findById(
                 updateData.id
             )
+            if (!before) {
+                throw new NotFoundException('House not found')
+            }
             const h = await this.houseModel.findByIdAndUpdate(
                 updateData.id,
                 { $set: {
@@ -213,7 +218,7 @@ export class HouseService {
 
             const newPassword = await bcrypt.hash(this.generatePassword(updateData.cc_resident, updateData.phone_resident), 10)
 
-            await this.userService.updateUser(Number(before?.cc_resident), newPassword, updateData.cc_resident, {session});
+            await this.userService.updateUserFromHouse(Number(before?.cc_resident), newPassword, updateData.cc_resident, {session});
             await session.commitTransaction();
 
             return await {
