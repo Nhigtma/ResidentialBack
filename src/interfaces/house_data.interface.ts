@@ -12,3 +12,10 @@ export interface HousesRetrieve {
         "cc_resident": number;
         "phone_resident": number;
 }
+
+export interface UpdateHouseInterface {
+    'id':string
+    'cc_resident': number;
+    'name_resident': string;
+    'phone_resident': number;
+}

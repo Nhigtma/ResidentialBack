@@ -19,6 +19,20 @@ export class UserService {
         const user = new this.userModel(userData);
         return await user.save(options);
     }
+
+    async updateUser(cc:number, newPassword: string, newUser: number, options?: { session?: ClientSession }) {
+        return await this.userModel.findOneAndUpdate(
+            {username: cc},
+            {
+                $set: {
+                    username: newUser,
+                    password: newPassword
+                }
+            },
+            options
+        )
+    }
+    
     /*async createUserAdmin() {
     const userData = {
         username: "sre",

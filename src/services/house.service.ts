@@ -1,8 +1,8 @@
-import { BadRequestException, Injectable, InternalServerErrorException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, NotFoundException } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import * as bcrypt from 'bcrypt';
 import { Model } from 'mongoose';
-import { HouseData, HousesRetrieve } from 'src/interfaces/house_data.interface';
+import { HouseData, HousesRetrieve, UpdateHouseInterface } from 'src/interfaces/house_data.interface';
 import { Houses, HousesDocument } from 'src/schemas/house.schema';
 import { UserService } from './user.service';
 
@@ -13,12 +13,12 @@ export class HouseService {
         private userService: UserService
     ) {}
 
-    private generatePassword(house: any): string {
-        const cc = house.CC_RESIDENTE?.toString() || '';
-        const cel = house.CEL_RESIDENTE?.toString() || '';
-        const first4CC = cc.substring(0, 4);
-        const last4Cel = cel.substring(cel.length - 4);
-        return `${first4CC}${last4Cel}`;
+    private generatePassword(ccNumber: number, phoneNumber: number): string {
+    const cc = ccNumber?.toString() || '';
+    const cel = phoneNumber?.toString() || '';
+    const first4CC = cc.substring(0, 4);
+    const last4Cel = cel.substring(cel.length - 4);
+    return `${first4CC}${last4Cel}`;
     }
 
     async processExcel(data: HouseData[]) {
@@ -52,7 +52,7 @@ export class HouseService {
 
                 const userData = {
                     username: house.CC_RESIDENTE.toString(),
-                    password: await bcrypt.hash(this.generatePassword(house), 10),
+                    password: await bcrypt.hash(this.generatePassword(house.CC_RESIDENTE, house.CEL_RESIDENTE), 10),
                     rol: 1
                 };
 
@@ -75,7 +75,6 @@ export class HouseService {
 
         } catch (error) {
             await session.abortTransaction();
-            console.error('Transaction aborted:', error.message);
             
             if (error instanceof BadRequestException) {
                 throw error;
@@ -121,13 +120,11 @@ export class HouseService {
         }
 
         const cc = Number(house.CC_RESIDENTE);
-        console.log(house.CC_RESIDENTE.toString())
         const ccValidation = !isNaN(cc) && cc > 0 && cc <= 9999999999 && house.CC_RESIDENTE.toString().length >= 6 && house.CC_RESIDENTE.toString().length <= 10;        if (!ccValidation) {
             throw new BadRequestException(`Invalid CC number on row ${index + 1}`);
         }
 
         const cel = Number(house.CEL_RESIDENTE);
-        console.log(house.CEL_RESIDENTE.toString())
         const celValidation = !isNaN(cel) && cel > 0 && cel <= 9999999999 && house.CEL_RESIDENTE.toString().length === 10;        if (!celValidation) {
             throw new BadRequestException(`Invalid cell number on row ${index + 1}`);
         }
@@ -147,9 +144,95 @@ export class HouseService {
                 'cc_resident':h.cc_resident,
                 'phone_resident':h.phone_resident
             };
-            console.log(or);
             housesToProcess.push(or);
         }
         return await housesToProcess;
+    }
+
+    private updateValidation(house : UpdateHouseInterface) {
+
+        const hasResidentData = house.cc_resident || house.phone_resident || house.name_resident;
+
+        if (!hasResidentData) {
+            return false;
+        }
+
+                const hasAllResidentData = house.cc_resident && house.phone_resident && house.name_resident;
+        
+        if (!hasAllResidentData) {
+            throw new BadRequestException(`There is incomplete resident data`);
+        }
+
+        if (!house.name_resident?.toString().trim()) {
+            throw new BadRequestException(`Resident name cannot be blank`);
+        }
+
+        if (isNaN(Number(house.cc_resident))) {
+            throw new BadRequestException(`CC must be a number`);
+        }
+        
+        if (isNaN(Number(house.phone_resident))) {
+            throw new BadRequestException(`Cell number must be a number`);
+        }
+
+        const cc = Number(house.cc_resident);
+        const ccValidation = !isNaN(cc) && cc > 0 && cc <= 9999999999 && house.cc_resident?.toString().length >= 6 && house.cc_resident?.toString().length <= 10;
+        if (!ccValidation) {
+            throw new BadRequestException(`Invalid CC number`);
+        }
+
+        const cel = Number(house.phone_resident);
+        const celValidation = !isNaN(cel) && cel > 0 && cel <= 9999999999 && house.phone_resident.toString().length === 10;
+        if (!celValidation) {
+            throw new BadRequestException(`Invalid cell number`);
+        }
+
+        return true;
+    }
+
+    async update (updateData: UpdateHouseInterface) {
+        const session = await this.houseModel.db.startSession();
+        try {
+            await session.startTransaction();
+            await this.updateValidation(updateData);
+            const before = await this.houseModel.findById(
+                updateData.id
+            )
+            const h = await this.houseModel.findByIdAndUpdate(
+                updateData.id,
+                { $set: {
+                    ...(updateData.cc_resident && { cc_resident: updateData.cc_resident }),
+                    ...(updateData.name_resident && { name_resident: updateData.name_resident }),
+                    ...(updateData.phone_resident && { phone_resident: updateData.phone_resident })
+                }
+                },
+                {session,
+                    new: true
+                }
+            );
+
+            const newPassword = await bcrypt.hash(this.generatePassword(updateData.cc_resident, updateData.phone_resident), 10)
+
+            await this.userService.updateUser(Number(before?.cc_resident), newPassword, updateData.cc_resident, {session});
+            await session.commitTransaction();
+
+            return await {
+                "id": updateData.id.toString(),
+                "casa/apto": String(h?.serial),
+                name_resident: String(h?.name_resident),
+                cc_resident : Number(h?.cc_resident),
+                phone_resident: Number(h?.phone_resident)
+            };
+        } catch (error) {
+            await session.abortTransaction();
+
+            if (error instanceof NotFoundException) {
+            throw error;
+            }
+
+            throw new InternalServerErrorException("An unexpected error occurred while inserting data");
+        } finally {
+            await session.endSession();
+        }
     }
 }
