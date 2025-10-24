@@ -14,12 +14,15 @@ export class UserService {
     }
 
     async findOneUserById (id: string) {
-        return this.userModel.findById({id, active:true}).lean().exec();
+        return this.userModel.findById({_id: id, active:true}).lean().exec();
     }
 
     async createUser(userData: UserData, options?: { session?: ClientSession }) {
+        if (await this.findOneUser(userData.username)) {
+            throw new BadRequestException('Already exists an user with that cc')
+        }
         const user = new this.userModel(userData);
-        if (await this.userModel.findOne({username: userData.username, active:false})) {
+        if (await this.userModel.findOne({username: userData.username, active:false},null, options)) {
             return await this.updateUserFromHouse(Number(userData.username), userData.password, Number(userData.username), options)
         }
         return await user.save(options);
@@ -63,11 +66,10 @@ export class UserService {
 
     async DeleteUser (id:string) {
         const session = await this.userModel.db.startSession();
-
         try {
             await session.startTransaction()
 
-            if(!(await this.findOneUserById(id)) || (await this.userModel.findOne({id, active: false}))) {
+            if(!(await this.findOneUserById(id)) || (await this.userModel.findOne({_id : id, active: false}, null, session))) {
                 throw new NotFoundException("No user founded")
             }
 
@@ -84,7 +86,7 @@ export class UserService {
             return "User deleted Succesfully"
         } catch (error) {
             await session.abortTransaction();
-                        
+            console.log(error)
             if (error instanceof BadRequestException) {
                 throw error;
             }
@@ -117,7 +119,7 @@ export class UserService {
         const user = {
             username: userData.username,
             password: await bcrypt.hash(userData.password, 10),
-            rol: 3
+            rol: 2
         }
         
         const createdUser = await this.userModel.create(user);

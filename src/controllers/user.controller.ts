@@ -74,7 +74,7 @@ export class UserController {
         return await this.userService.createUserSubAdmin (user);
     }
 
-    @Delete()
+    @Delete(':id')
     @UseGuards(JwtAuthGuard)
     @RequiredPermission(3)
     @ApiOkResponse({

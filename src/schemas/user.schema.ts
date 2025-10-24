@@ -10,7 +10,7 @@ export class Users {
     @Prop({required: true, default: true})
     active: boolean;
     
-    @Prop({required: true, unique: true})
+    @Prop({required: true})
     username: string;
 
     @Prop({required: true})

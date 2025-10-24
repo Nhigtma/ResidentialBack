@@ -23,10 +23,8 @@ export class HouseService {
 
     async processExcel(data: HouseData[]) {
         const session = await this.houseModel.db.startSession();
-        
         try {
             await session.startTransaction();
-            
             const insertedHouses: Array<{
                 serial: string | number;
                 name_resident: string;
@@ -49,7 +47,6 @@ export class HouseService {
 
             for (let index = 0; index < housesToProcess.length; index++) {
                 const house = housesToProcess[index];
-
                 const userData = {
                     username: house.CC_RESIDENTE.toString(),
                     password: await bcrypt.hash(this.generatePassword(house.CC_RESIDENTE, house.CEL_RESIDENTE), 10),
@@ -65,7 +62,7 @@ export class HouseService {
                     phone_resident: house.CEL_RESIDENTE,
                     id_user: String(user?._id)
                 };
-                if (await this.houseModel.findOne({serial: houseModel.serial})){
+                if (await this.houseModel.findOne({serial: houseModel.serial}, null, {session})){
                     throw new BadRequestException('Already exists a house with that serial')
                 }
                 await this.houseModel.create([houseModel], { session });
@@ -77,9 +74,8 @@ export class HouseService {
 
         } catch (error) {
             await session.abortTransaction();
-            
-            if (error instanceof BadRequestException) {
-                throw error;
+            if (error instanceof NotFoundException) {
+            throw error;
             }
             throw new InternalServerErrorException('An unexpected error occurred while inserting data');
         } finally {
